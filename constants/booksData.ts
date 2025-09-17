@@ -4,6 +4,7 @@ export interface Book {
   author: string;
   genre: string;
   description: string;
+  plot: string;
   image: string;
   publishedYear?: number;
   pages?: number;
@@ -13,15 +14,16 @@ export interface Book {
 export const booksData: Book[] = [
   {
     id: '1',
-    title: 'Il Nome della Rosa',
-    author: 'Umberto Eco',
-    genre: 'Romanzo storico',
-    description: 'Un misterioso giallo medievale ambientato in un monastero benedettino.',
-    image: 'https://m.media-amazon.com/images/I/81JcSw7auLL._AC_UF1000,1000_QL80_.jpg',
-    publishedYear: 1980,
-    pages: 512,
-    rating: 4.5
-  },
+    title: 'Orgoglio e Pregiudizio',
+    author: 'Jane Austen',
+    genre: 'Romanzo rosa',
+    description: 'Una delle più famose storie d\'amore della letteratura inglese.',
+    plot: `Orgoglio e Pregiudizio racconta la storia delle cinque sorelle Bennet e della loro ricerca di matrimoni vantaggiosi nell'Inghilterra rurale del XIX secolo. La protagonista, Elizabeth Bennet, è una giovane intelligente e indipendente che incontra l'orgoglioso e ricco Mr. Darcy. Inizialmente il loro rapporto è segnato da incomprensioni e pregiudizi reciproci, ma attraverso varie vicissitudini, malintesi e rivelazioni, i due personaggi imparano a superare i loro difetti e a riconoscere il vero amore. Il romanzo esplora temi come le classi sociali, l'educazione, i pregiudizi e la natura del matrimonio.`,
+    image: 'https://m.media-amazon.com/images/I/71Q1tPupKjL._AC_UF1000,1000_QL80_.jpg',
+    publishedYear: 1813,
+    pages: 432,
+    rating: 4.7
+  }
 
 ];
 
