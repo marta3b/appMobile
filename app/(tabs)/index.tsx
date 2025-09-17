@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, StyleSheet, FlatList, TextInput, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -7,7 +9,69 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
 
+import { booksData, booksByGenre, genreOrder, Book } from '@/constants/booksData';
+import { addBookToSaved } from '@/constants/savedBooksData';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 export default function HomeScreen() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredBooks, setFilteredBooks] = useState<Book[]>(booksData);
+
+
+
+  const renderBookItem = ({ item }: { item: Book }) => (
+    <TouchableOpacity 
+      onPress={() => {
+        router.push(`/book/${item.id}`);
+      }}
+    >
+      <ThemedView style={styles.bookCard}>
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.bookImage}
+          contentFit="cover"
+          transition={1000}
+        />
+        <View style={styles.bookInfo}>
+          <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
+          <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
+          <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
+          
+          <TouchableOpacity 
+            style={styles.saveButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              addBookToSaved(item, 'preferiti');
+              alert(`"${item.title}" aggiunto ai preferiti!`);
+            }}
+          >
+            <Ionicons name="heart-outline" size={16} color="#ff3b30" />
+            <ThemedText style={styles.saveText}>Aggiungi ai preferiti</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    </TouchableOpacity>
+  );
+
+  const renderGenreSection = (genre: string) => {
+    const books = booksByGenre[genre];
+    if (!books || books.length === 0) return null;
+    
+    return (
+      <View key={genre} style={styles.genreSection}>
+        <ThemedText type="title" style={styles.genreTitle}>{genre}</ThemedText>
+        <FlatList
+          data={books}
+          renderItem={renderBookItem}
+          keyExtractor={item => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        />
+      </View>
+    );
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -18,14 +82,41 @@ export default function HomeScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">!</ThemedText>
+        <ThemedText type="title">Libreria</ThemedText>
         <HelloWave />
       </ThemedView>
+      
+      <ThemedView style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Cerca libri, autori o generi..."
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+      </ThemedView>
+
+      {searchQuery ? (
+        <ThemedView style={styles.stepContainer}>
+          <ThemedText type="subtitle">Risultati della ricerca ({filteredBooks.length})</ThemedText>
+          <FlatList
+            data={filteredBooks}
+            renderItem={renderBookItem}
+            keyExtractor={item => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.gridContainer}
+            scrollEnabled={false}
+          />
+        </ThemedView>
+      ) : (
+        <ScrollView>
+          {genreOrder.map(renderGenreSection)}
+        </ScrollView>
+      )}
+
       <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
+        <ThemedText type="subtitle">Esplora la tua libreria</ThemedText>
         <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
+          Premi{' '}
           <ThemedText type="defaultSemiBold">
             {Platform.select({
               ios: 'cmd + d',
@@ -33,45 +124,22 @@ export default function HomeScreen() {
               web: 'F12',
             })}
           </ThemedText>{' '}
-          to open developer tools.
+          per aprire gli strumenti di sviluppo.
         </ThemedText>
       </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <Link href="/modal">
           <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
+            <ThemedText type="subtitle">Vedi i tuoi preferiti</ThemedText>
           </Link.Trigger>
           <Link.Preview />
           <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
+            <Link.MenuAction title="Azione" icon="heart" onPress={() => alert('Azione preferiti')} />
           </Link.Menu>
         </Link>
-
         <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
+          Vai alla sezione Preferiti per vedere i libri che hai salvato.
         </ThemedText>
       </ThemedView>
     </ParallaxScrollView>
@@ -83,10 +151,74 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 16,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  searchInput: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'white',
   },
   stepContainer: {
     gap: 8,
     marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  genreSection: {
+    marginBottom: 24,
+  },
+  genreTitle: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    fontSize: 20,
+  },
+  bookCard: {
+    width: 150,
+    marginRight: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: 'white',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+  },
+  bookImage: {
+    width: '100%',
+    height: 200,
+  },
+  bookInfo: {
+    padding: 8,
+  },
+  authorText: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  genreText: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 4,
+  },
+  gridContainer: {
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  saveText: {
+    fontSize: 12,
+    color: '#ff3b30',
+    marginLeft: 4,
   },
   reactLogo: {
     height: 178,
