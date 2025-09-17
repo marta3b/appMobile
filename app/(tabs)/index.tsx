@@ -18,7 +18,20 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredBooks, setFilteredBooks] = useState<Book[]>(booksData);
 
-
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query === '') {
+      setFilteredBooks(booksData);
+    } else {
+      const filtered = booksData.filter(book => 
+        book.title.toLowerCase().includes(query.toLowerCase()) ||
+        book.author.toLowerCase().includes(query.toLowerCase()) ||
+        book.genre.toLowerCase().includes(query.toLowerCase()) ||
+        book.description.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredBooks(filtered);
+    }
+  };
 
   const renderBookItem = ({ item }: { item: Book }) => (
     <TouchableOpacity 
