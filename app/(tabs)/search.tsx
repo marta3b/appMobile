@@ -1,57 +1,36 @@
 import { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
-import { View, StyleSheet, FlatList, TextInput, TouchableOpacity} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { View, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
-import { booksData, Book, genres } from '@/constants/booksData';
+import { booksData, Book } from '@/constants/booksData';
 import { addBookToSaved } from '@/constants/savedBooksData';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function SearchScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
-  const [selectedGenre, setSelectedGenre] = useState('');
+  const [filteredBooks, setFilteredBooks] = useState<Book[]>(booksData);
 
-  useEffect(() => {
-    if (params.genre) {
-      setSelectedGenre(params.genre as string);
-      filterBooks('', params.genre as string);
-    }
-  }, [params]);
-
-  const filterBooks = (query: string, genre: string = '') => {
-    let filtered = booksData;
-    
-    if (query) {
-      filtered = filtered.filter(book => 
+  const filterBooks = (query: string) => {
+    if (query === '') {
+      setFilteredBooks(booksData);
+    } else {
+      const filtered = booksData.filter(book => 
         book.title.toLowerCase().includes(query.toLowerCase()) ||
         book.author.toLowerCase().includes(query.toLowerCase())
       );
+      setFilteredBooks(filtered);
     }
-    
-    if (genre) {
-      filtered = filtered.filter(book => book.genre === genre);
-    }
-    
-    setFilteredBooks(filtered);
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setSelectedGenre('');
     filterBooks(query);
-  };
-
-  const handleGenreSelect = (genre: string) => {
-    setSelectedGenre(genre);
-    setSearchQuery('');
-    filterBooks('', genre);
   };
 
   const renderBookItem = ({ item }: { item: Book }) => (
@@ -61,21 +40,29 @@ export default function SearchScreen() {
       }}
     >
       <ThemedView style={styles.bookCard}>
-        <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
-        <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
-        <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
-        
-        <TouchableOpacity 
-          style={styles.saveButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            addBookToSaved(item, 'preferiti');
-            alert(`"${item.title}" aggiunto ai preferiti!`);
-          }}
-        >
-          <Ionicons name="heart-outline" size={16} color="#ff3b30" />
-          <ThemedText style={styles.saveText}>Salva</ThemedText>
-        </TouchableOpacity>
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.bookImage}
+          contentFit="cover"
+          transition={1000}
+        />
+        <View style={styles.bookInfo}>
+          <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
+          <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
+          <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
+          
+          <TouchableOpacity 
+            style={styles.saveButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              addBookToSaved(item, 'preferiti');
+              alert(`"${item.title}" aggiunto ai preferiti!`);
+            }}
+          >
+            <Ionicons name="heart-outline" size={16} color="#ff3b30" />
+            <ThemedText style={styles.saveText}>Salva</ThemedText>
+          </TouchableOpacity>
+        </View>
       </ThemedView>
     </TouchableOpacity>
   );
@@ -83,11 +70,12 @@ export default function SearchScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
-          headerImage={
-            <Image
-              source={require('@/assets/images/libri-bho.png')}
-            />
-          }>
+      headerImage={
+        <Image
+          source={require('@/assets/images/libri-bho.png')}
+          style={styles.headerImage}
+        />
+      }>
 
       <ThemedView style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -104,40 +92,36 @@ export default function SearchScreen() {
             placeholder="Cerca libri o autori..."
             value={searchQuery}
             onChangeText={handleSearch}
+            autoFocus={true}
           />
-        </View>
-      </ThemedView>
-
-      <ThemedView style={styles.genresSection}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Generi</ThemedText>
-        <View style={styles.genresContainer}>
-          {genres.map(genre => (
-            <TouchableOpacity 
-              key={genre} 
-              style={[styles.genreButton, selectedGenre === genre && styles.genreButtonSelected]}
-              onPress={() => handleGenreSelect(genre)}
-            >
-              <ThemedText style={[styles.genreButtonText, selectedGenre === genre && styles.genreButtonTextSelected]}>
-                {genre}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
         </View>
       </ThemedView>
 
       <ThemedView style={styles.resultsSection}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
-          {selectedGenre ? `Risultati per ${selectedGenre}` : 
-           searchQuery ? `Risultati per "${searchQuery}"` : 
-           'Tutti i libri'}
+          {searchQuery ? `Risultati per "${searchQuery}" (${filteredBooks.length})` : 'Tutti i libri'}
         </ThemedText>
         
-        <FlatList
-          data={filteredBooks.length > 0 ? filteredBooks : booksData}
-          renderItem={renderBookItem}
-          keyExtractor={item => item.id}
-          scrollEnabled={false}
-        />
+        {filteredBooks.length === 0 && searchQuery ? (
+          <ThemedView style={styles.emptyState}>
+            <Ionicons name="search-outline" size={48} color="#ccc" />
+            <ThemedText style={styles.emptyText}>
+              Nessun risultato trovato
+            </ThemedText>
+            <ThemedText style={styles.emptySubtext}>
+              Prova con un termine di ricerca diverso
+            </ThemedText>
+          </ThemedView>
+        ) : (
+          <FlatList
+            data={filteredBooks}
+            renderItem={renderBookItem}
+            keyExtractor={item => item.id}
+            horizontal={true}
+            showsHorizontalScrollIndicator={true}
+            contentContainerStyle={styles.horizontalList}
+          />
+        )}
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -173,56 +157,47 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: '100%',
-  },
-  genresSection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    marginBottom: 16,
-  },
-  genresContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  genreButton: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  genreButtonSelected: {
-    backgroundColor: '#2E8B57',
-  },
-  genreButtonText: {
-    color: '#333',
-  },
-  genreButtonTextSelected: {
-    color: 'white',
+    fontSize: 16,
   },
   resultsSection: {
     paddingHorizontal: 16,
+    flex: 1,
+  },
+  sectionTitle: {
+    marginBottom: 16,
+    fontSize: 18,
+  },
+  horizontalList: {
+    paddingVertical: 8,
+    paddingRight: 16,
   },
   bookCard: {
-    padding: 16,
-    marginBottom: 12,
+    width: 150,
+    marginRight: 16,
     borderRadius: 12,
+    overflow: 'hidden',
     backgroundColor: 'white',
-    elevation: 1,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
+  },
+  bookImage: {
+    width: '100%',
+    height: 200,
+  },
+  bookInfo: {
+    padding: 12,
   },
   authorText: {
-    fontSize: 14,
+    fontSize: 12,
     marginTop: 4,
     color: '#666',
   },
   genreText: {
     color: '#888',
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
   },
   saveButton: {
@@ -234,5 +209,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ff3b30',
     marginLeft: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
+    marginTop: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  headerImage: {
+    height: 200,
+    width: '100%',
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
   },
 });
