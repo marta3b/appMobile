@@ -160,6 +160,47 @@ export default function ProfileScreen() {
         )}
       </ThemedView>
 
+      <ThemedView style={styles.readSection}>
+        <ThemedText type="title" style={styles.sectionTitle}>
+          Libri Letti ({readBooksCount})
+        </ThemedText>
+
+        {readBooksCount === 0 ? (
+          <ThemedView style={styles.emptyState}>
+            <Ionicons name="book-outline" size={48} color="#ccc" />
+            <ThemedText style={styles.emptyText}>
+              Nessun libro letto
+            </ThemedText>
+            <ThemedText style={styles.emptySubtext}>
+              Inizia a leggere e segna i libri come letti!
+            </ThemedText>
+          </ThemedView>
+        ) : (
+          <ThemedView style={styles.readBooksList}>
+            {savedBooks
+              .filter(book => globalThis.readBooks.includes(book.id))
+              .slice(0, 5) // Mostra solo i primi 5 per non appesantire
+              .map(book => (
+                <TouchableOpacity 
+                  key={book.id}
+                  style={styles.readBookItem}
+                  onPress={() => router.push(`/book/${book.id}`)}
+                >
+                  <Ionicons name="checkmark-circle" size={20} color="#2E8B57" />
+                  <ThemedText style={styles.readBookTitle} numberOfLines={1}>
+                    {book.title}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))
+            }
+            {readBooksCount > 5 && (
+              <ThemedText style={styles.moreText}>
+                +{readBooksCount - 5} altri libri letti
+              </ThemedText>
+            )}
+          </ThemedView>
+        )}
+      </ThemedView>
 
       <ThemedView style={styles.actionsSection}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
