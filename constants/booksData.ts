@@ -23,15 +23,30 @@ export const booksData: Book[] = [
     publishedYear: 1813,
     pages: 432,
     rating: 4.7
-  }
-
+  },
+ 
 ];
 
-export const genreOrder = ['Giallo/Thriller', 'Romanzo storico', 'Romanzo rosa', 'Saggio/Non-fiction'];
+export const genres = [
+  'Romanzo rosa', 
+  'Giallo/Thriller', 
+  'Fantasy', 
+  'Distopia', 
+  'Favola', 
+  'Romanzo distopico', 
+  'Saggio/Non-fiction', 
+  'Romanzo storico'
+];
+
+export const genreOrder = ['Giallo/Thriller', 'Romanzo storico', 'Romanzo rosa', 'Fantasy', 'Distopia', 'Saggio/Non-fiction'];
 
 export const booksByGenre: Record<string, Book[]> = {
   'Giallo/Thriller': booksData.filter(book => book.genre === 'Giallo/Thriller'),
   'Romanzo storico': booksData.filter(book => book.genre === 'Romanzo storico'),
   'Romanzo rosa': booksData.filter(book => book.genre === 'Romanzo rosa'),
+  'Fantasy': booksData.filter(book => book.genre === 'Fantasy'),
+  'Distopia': booksData.filter(book => book.genre === 'Distopia'),
+  'Favola': booksData.filter(book => book.genre === 'Favola'),
+  'Romanzo distopico': booksData.filter(book => book.genre === 'Romanzo distopico'),
   'Saggio/Non-fiction': booksData.filter(book => book.genre === 'Saggio/Non-fiction'),
 };

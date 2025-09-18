@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -5,13 +6,39 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { booksData } from '@/constants/booksData';
-import { addBookToSaved } from '@/constants/savedBooksData';
+import { booksData } from '../../constants/booksData';
+import { addBookToSaved, getSavedBooks, onSavedBooksChange, removeBookFromSaved } from '../../constants/savedBooksData'; // Aggiungi removeBookFromSaved
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const book = booksData.find(b => b.id === id);
+  const [isAddedToFavorites, setIsAddedToFavorites] = useState(false);
+
+  useEffect(() => {
+    const checkIfBookIsSaved = () => {
+      const savedBooks = getSavedBooks();
+      const isSaved = savedBooks.some(b => b.id === id);
+      setIsAddedToFavorites(isSaved);
+    };
+
+    checkIfBookIsSaved();
+
+    const unsubscribe = onSavedBooksChange(checkIfBookIsSaved);
+    return unsubscribe;
+  }, [id]);
+
+  const handleToggleFavorite = () => {
+    if (!book) return;
+
+    if (isAddedToFavorites) {
+      removeBookFromSaved(book.id);
+      alert(`"${book.title}" rimosso dai preferiti!`);
+    } else {
+      addBookToSaved(book, 'preferiti');
+      alert(`"${book.title}" aggiunto ai preferiti!`);
+    }
+  };
 
   if (!book) {
     return (
@@ -43,14 +70,12 @@ export default function BookDetailScreen() {
           <ThemedText type="default" style={styles.author}>di {book.author}</ThemedText>
           <ThemedText type="subtitle" style={styles.genre}>{book.genre}</ThemedText>
           
-          {/* DESCRIZIONE E TRAMA PRIMA DEI DETTAGLI TECNICI */}
           <ThemedText style={styles.sectionTitle}>Descrizione</ThemedText>
           <ThemedText style={styles.description}>{book.description}</ThemedText>
           
           <ThemedText style={styles.sectionTitle}>Trama</ThemedText>
           <ThemedText style={styles.plot}>{book.plot}</ThemedText>
           
-          {/* DETTAGLI TECNICI SEMPLICI DOPO LA TRAMA */}
           <View style={styles.technicalDetails}>
             {book.publishedYear && (
               <ThemedText style={styles.detail}>Anno di pubblicazione: {book.publishedYear}</ThemedText>
@@ -68,25 +93,27 @@ export default function BookDetailScreen() {
             )}
           </View>
           
-          {/* BOTTONI SEMPLICI */}
           <View style={styles.actions}>
             <TouchableOpacity 
-              style={styles.simpleButton}
-              onPress={() => {
-                addBookToSaved(book, 'preferiti');
-                alert(`"${book.title}" aggiunto ai preferiti!`);
-              }}
+              style={[styles.simpleButton, isAddedToFavorites ? styles.removeButton : styles.addButton]}
+              onPress={handleToggleFavorite}
             >
-              <Ionicons name="heart-outline" size={20} color="#ff3b30" />
-              <ThemedText style={styles.simpleButtonText}>Aggiungi ai preferiti</ThemedText>
+              <Ionicons 
+                name={isAddedToFavorites ? "heart" : "heart-outline"} 
+                size={20} 
+                color={isAddedToFavorites ? "#ff3b30" : "#ff3b30"} 
+              />
+              <ThemedText style={styles.simpleButtonText}>
+                {isAddedToFavorites ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
+              </ThemedText>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.simpleButton}
               onPress={() => Linking.openURL(`https://www.amazon.it/s?k=${encodeURIComponent(book.title + ' ' + book.author)}`)}
             >
-              <Ionicons name="search-outline" size={20} color="#007AFF" />
-              <ThemedText style={styles.simpleButtonText}>Cerca online per acquistare</ThemedText>
+              <Ionicons name="logo-amazon" size={20} color="#FF9900" />
+              <ThemedText style={styles.simpleButtonText}>Cerca su Amazon</ThemedText>
             </TouchableOpacity>
           </View>
         </ThemedView>
@@ -138,18 +165,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 16,
     marginBottom: 8,
-    color: '#eee',
+    color: '#333',
   },
   description: {
     fontSize: 16,
     lineHeight: 22,
     marginBottom: 16,
-    color: '#eee',
+    color: '#444',
   },
   plot: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#eee',
+    color: '#444',
     textAlign: 'justify',
     marginBottom: 20,
   },
@@ -163,7 +190,7 @@ const styles = StyleSheet.create({
   detail: {
     fontSize: 16,
     marginBottom: 8,
-    color: '#eee',
+    color: '#555',
   },
   starIcon: {
     marginLeft: 4,
@@ -177,11 +204,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#b882b8ff',
     borderRadius: 8,
     flex: 1,
     marginHorizontal: 4,
     justifyContent: 'center',
+  },
+  addButton: {
+    backgroundColor: '#f8f8f8',
+  },
+  removeButton: {
+    backgroundColor: '#fff0f0',
+    borderWidth: 1,
+    borderColor: '#ff3b30',
   },
   simpleButtonText: {
     marginLeft: 8,
