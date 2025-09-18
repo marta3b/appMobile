@@ -12,20 +12,37 @@ import { Book } from '@/constants/booksData';
 import { getSavedBooks, removeBookFromSaved, onSavedBooksChange } from '@/constants/savedBooksData';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+// Variabile globale per i libri letti 
+declare global {
+  var readBooks: string[];
+}
+globalThis.readBooks = globalThis.readBooks || [];
+
 export default function ProfileScreen() {
   const router = useRouter();
   const [savedBooks, setSavedBooks] = useState<Book[]>([]);
+  const [readBooksCount, setReadBooksCount] = useState(0);
   const [userName] = useState('Lettore Appassionato');
 
   useEffect(() => {
-    const loadSavedBooks = () => {
+    const loadData = () => {
       const books = getSavedBooks();
       setSavedBooks(books);
+      setReadBooksCount(globalThis.readBooks.length);
     };
 
-    loadSavedBooks();
-    const unsubscribe = onSavedBooksChange(loadSavedBooks);
-    return unsubscribe;
+    loadData();
+    
+    const unsubscribe = onSavedBooksChange(loadData);
+    
+    const interval = setInterval(() => {
+      setReadBooksCount(globalThis.readBooks.length);
+    }, 1000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   const renderBookItem = ({ item }: { item: Book }) => (
@@ -86,7 +103,7 @@ export default function ProfileScreen() {
               {userName}
             </ThemedText>
             <ThemedText style={styles.userStats}>
-              {savedBooks.length} libri preferiti
+              {savedBooks.length} libri preferiti • {readBooksCount} libri letti
             </ThemedText>
           </View>
         </View>
@@ -98,24 +115,21 @@ export default function ProfileScreen() {
             </ThemedText>
             <ThemedText style={styles.statLabel}>Preferiti</ThemedText>
           </View>
+          
+          <View style={styles.statDivider} />
+          
           <View style={styles.statItem}>
             <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              {savedBooks.filter(book => book.rating && book.rating >= 4).length}
+              {readBooksCount}
             </ThemedText>
-            <ThemedText style={styles.statLabel}>Altamente valutati</ThemedText>
-          </View>
-          <View style={styles.statItem}>
-            <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              {Math.floor(savedBooks.length * 0.6)}
-            </ThemedText>
-            <ThemedText style={styles.statLabel}>In lettura</ThemedText>
+            <ThemedText style={styles.statLabel}>Letti</ThemedText>
           </View>
         </View>
       </ThemedView>
 
       <ThemedView style={styles.favoritesSection}>
         <ThemedText type="title" style={styles.sectionTitle}>
-          I tuoi Preferiti
+          I tuoi Preferiti ({savedBooks.length})
         </ThemedText>
 
         {savedBooks.length === 0 ? (
@@ -145,6 +159,7 @@ export default function ProfileScreen() {
           />
         )}
       </ThemedView>
+
 
       <ThemedView style={styles.actionsSection}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -207,15 +222,22 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignItems: 'center',
     backgroundColor: '#f8f8f8',
     padding: 16,
     borderRadius: 12,
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#ddd',
   },
   statNumber: {
-    fontSize: 20,
+    fontSize: 24,
     color: '#2E8B57',
   },
   statLabel: {
@@ -224,6 +246,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   favoritesSection: {
+    padding: 20,
+    marginBottom: 20,
+  },
+  readSection: {
     padding: 20,
     marginBottom: 20,
   },
@@ -297,6 +323,30 @@ const styles = StyleSheet.create({
   },
   gridContainer: {
     justifyContent: 'space-between',
+  },
+  readBooksList: {
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 12,
+  },
+  readBookItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  readBookTitle: {
+    marginLeft: 12,
+    flex: 1,
+    color: '#333',
+  },
+  moreText: {
+    textAlign: 'center',
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 8,
   },
   actionsSection: {
     padding: 20,
