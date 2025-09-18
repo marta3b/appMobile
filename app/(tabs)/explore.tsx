@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
-import { View, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -9,15 +9,14 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 import { Book } from '@/constants/booksData';
-import { getSavedBooks, removeBookFromSaved } from '@/constants/savedBooksData';
+import { getSavedBooks, removeBookFromSaved, onSavedBooksChange } from '@/constants/savedBooksData';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [savedBooks, setSavedBooks] = useState<Book[]>([]);
-  const [userName] = useState('Lettore Appassionato'); // Nome utente fisso per ora
+  const [userName] = useState('Lettore Appassionato');
 
-  // Carica i libri salvati
   useEffect(() => {
     const loadSavedBooks = () => {
       const books = getSavedBooks();
@@ -25,6 +24,8 @@ export default function ProfileScreen() {
     };
 
     loadSavedBooks();
+    const unsubscribe = onSavedBooksChange(loadSavedBooks);
+    return unsubscribe;
   }, []);
 
   const renderBookItem = ({ item }: { item: Book }) => (
@@ -50,7 +51,6 @@ export default function ProfileScreen() {
             onPress={(e) => {
               e.stopPropagation();
               removeBookFromSaved(item.id);
-              setSavedBooks(getSavedBooks()); // Aggiorna la lista
               alert(`"${item.title}" rimosso dai preferiti!`);
             }}
           >
@@ -74,7 +74,6 @@ export default function ProfileScreen() {
         />
       }>
       
-      {/* Sezione Profilo Utente */}
       <ThemedView style={styles.profileSection}>
         <View style={styles.profileHeader}>
           <Image 
@@ -101,20 +100,19 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statItem}>
             <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              12
+              {savedBooks.filter(book => book.rating && book.rating >= 4).length}
             </ThemedText>
-            <ThemedText style={styles.statLabel}>Letti</ThemedText>
+            <ThemedText style={styles.statLabel}>Altamente valutati</ThemedText>
           </View>
           <View style={styles.statItem}>
             <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              8
+              {Math.floor(savedBooks.length * 0.6)}
             </ThemedText>
             <ThemedText style={styles.statLabel}>In lettura</ThemedText>
           </View>
         </View>
       </ThemedView>
 
-      {/* Sezione Preferiti */}
       <ThemedView style={styles.favoritesSection}>
         <ThemedText type="title" style={styles.sectionTitle}>
           I tuoi Preferiti
@@ -148,7 +146,6 @@ export default function ProfileScreen() {
         )}
       </ThemedView>
 
-      {/* Sezione Azioni */}
       <ThemedView style={styles.actionsSection}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Azioni
