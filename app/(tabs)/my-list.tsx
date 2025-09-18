@@ -16,10 +16,11 @@ export default function MyListScreen() {
   const [savedBooks, setSavedBooks] = useState<Book[]>([]);
 
   useEffect(() => {
-    const loadSavedBooks = () => {
-      const books = getSavedBooks();
-      setSavedBooks(books);
-    };
+  const loadSavedBooks = () => {
+    const books = getSavedBooks();
+    console.log('Libri caricati:', books.length);
+    setSavedBooks(books);
+  };
 
     loadSavedBooks();
     const unsubscribe = onSavedBooksChange(loadSavedBooks);
@@ -33,33 +34,41 @@ export default function MyListScreen() {
       }}
     >
       <ThemedView style={styles.bookCard}>
-        <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
-        <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
-        <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
-        
-        <View style={styles.actions}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              // Segna come letto
-            }}
-          >
-            <Ionicons name="checkmark-circle-outline" size={16} color="#007AFF" />
-            <ThemedText style={styles.actionText}>Letto</ThemedText>
-          </TouchableOpacity>
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.bookImage}
+          contentFit="cover"
+          transition={1000}
+        />
+        <View style={styles.bookInfo}>
+          <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
+          <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
+          <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
           
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              removeBookFromSaved(item.id);
-              alert(`"${item.title}" rimosso dalla lista!`);
-            }}
-          >
-            <Ionicons name="trash-outline" size={16} color="#ff3b30" />
-            <ThemedText style={styles.actionText}>Rimuovi</ThemedText>
-          </TouchableOpacity>
+          <View style={styles.actions}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                // Segna come letto
+              }}
+            >
+              <Ionicons name="checkmark-circle-outline" size={16} color="#007AFF" />
+              <ThemedText style={styles.actionText}>Letto</ThemedText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                removeBookFromSaved(item.id);
+                alert(`"${item.title}" rimosso dalla lista!`);
+              }}
+            >
+              <Ionicons name="trash-outline" size={16} color="#ff3b30" />
+              <ThemedText style={styles.actionText}>Rimuovi</ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
       </ThemedView>
     </TouchableOpacity>
@@ -67,12 +76,14 @@ export default function MyListScreen() {
 
   return (
     <ParallaxScrollView
-          headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
-              headerImage={
-                <Image
-                  source={require('@/assets/images/libri-bho.png')}
-                />
-    }>
+      headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
+      headerImage={
+        <Image
+          source={require('@/assets/images/libri-bho.png')}
+          style={styles.headerImage}
+        />
+      }>
+      
       <ThemedView style={styles.header}>
         <ThemedText type="title">La tua lista</ThemedText>
         <ThemedText style={styles.subtitle}>
@@ -106,6 +117,8 @@ export default function MyListScreen() {
             data={savedBooks}
             renderItem={renderBookItem}
             keyExtractor={item => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.gridContainer}
             scrollEnabled={false}
           />
         </ThemedView>
@@ -159,15 +172,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bookCard: {
-    padding: 16,
-    marginBottom: 12,
+    width: '48%',
+    marginBottom: 16,
+    marginRight: '4%',
     borderRadius: 12,
+    overflow: 'hidden',
     backgroundColor: 'white',
-    elevation: 1,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
+  },
+  bookImage: {
+    width: '100%',
+    height: 200,
+  },
+  bookInfo: {
+    padding: 12,
   },
   authorText: {
     fontSize: 14,
@@ -178,6 +200,9 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 12,
     marginTop: 4,
+  },
+  gridContainer: {
+    justifyContent: 'space-between',
   },
   actions: {
     flexDirection: 'row',
@@ -191,5 +216,12 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 12,
     marginLeft: 4,
+  },
+  headerImage: {
+    height: 200,
+    width: '100%',
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
   },
 });
