@@ -45,7 +45,7 @@ export const addBookToSaved = (book: Book, listName: string) => {
 };
 
 export const getSavedBooks = () => {
-  return [savedBooks];
+  return savedBooks;
 };
 
 export const removeBookFromSaved = (bookId: string) => {

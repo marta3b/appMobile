@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Image } from 'expo-image';
-import { View, StyleSheet, FlatList, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, FlatList, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -13,19 +13,16 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>(booksData);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query === '') {
+  const handleGenreSelect = (genre: string) => {
+    if (selectedGenre === genre) {
+      setSelectedGenre(null);
       setFilteredBooks(booksData);
     } else {
-      const filtered = booksData.filter(book => 
-        book.title.toLowerCase().includes(query.toLowerCase()) ||
-        book.author.toLowerCase().includes(query.toLowerCase()) ||
-        book.genre.toLowerCase().includes(query.toLowerCase())
-      );
+      setSelectedGenre(genre);
+      const filtered = booksData.filter(book => book.genre === genre);
       setFilteredBooks(filtered);
     }
   };
@@ -93,38 +90,40 @@ export default function HomeScreen() {
       }>
       
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Libroo</ThemedText>
+        <ThemedText type="title">Shelfy</ThemedText>
         <ThemedText style={styles.subtitle}>La tua libreria personale</ThemedText>
-      </ThemedView>
-      
-      <ThemedView style={styles.searchContainer}>
-        <TouchableOpacity 
-          style={styles.searchInput}
-          onPress={() => router.push('/search')}
-        >
-          <Ionicons name="search" size={20} color="#666" />
-          <ThemedText style={styles.searchPlaceholder}>Cerca libri, autori o generi...</ThemedText>
-        </TouchableOpacity>
       </ThemedView>
 
       <ThemedView style={styles.popularSection}>
-        <ThemedText type="title" style={styles.sectionTitle}>Generi popolari</ThemedText>
+        <ThemedText type="title" style={styles.sectionTitle}>
+          {selectedGenre ? `Libri di genere: ${selectedGenre}` : 'Generi popolari'}
+        </ThemedText>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.genreScroll}>
-          {genres.slice(0, 6).map(genre => (
+          {genres.map(genre => (
             <TouchableOpacity 
               key={genre} 
-              style={styles.genrePill}
-              onPress={() => router.push({ pathname: '/search', params: { genre } })}
+              style={[
+                styles.genrePill,
+                selectedGenre === genre && styles.genrePillSelected
+              ]}
+              onPress={() => handleGenreSelect(genre)}
             >
-              <ThemedText style={styles.genrePillText}>{genre}</ThemedText>
+              <ThemedText style={[
+                styles.genrePillText,
+                selectedGenre === genre && styles.genrePillTextSelected
+              ]}>
+                {genre}
+              </ThemedText>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </ThemedView>
 
-      {searchQuery ? (
+      {selectedGenre ? (
         <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle">Risultati della ricerca ({filteredBooks.length})</ThemedText>
+          <ThemedText type="subtitle">
+            {filteredBooks.length} libro{filteredBooks.length !== 1 ? 'i' : ''} trovati
+          </ThemedText>
           <FlatList
             data={filteredBooks}
             renderItem={renderBookItem}
@@ -143,7 +142,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Esplora la tua libreria</ThemedText>
         <ThemedText>
-          Scorri per scoprire nuovi libri e generi letterari.
+          Seleziona un genere per filtrare i libri o scorri per scoprire tutte le categorie.
         </ThemedText>
       </ThemedView>
     </ParallaxScrollView>
@@ -159,24 +158,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  searchInput: {
-    height: 50,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  searchPlaceholder: {
     color: '#666',
   },
   stepContainer: {
@@ -261,8 +242,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 8,
   },
+  genrePillSelected: {
+    backgroundColor: '#2E8B57',
+  },
   genrePillText: {
     color: '#2E8B57',
     fontWeight: '500',
+  },
+  genrePillTextSelected: {
+    color: 'white',
   },
 });

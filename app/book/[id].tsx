@@ -6,8 +6,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { booksData } from '../../constants/booksData';
-import { addBookToSaved, getSavedBooks, onSavedBooksChange, removeBookFromSaved } from '../../constants/savedBooksData'; // Aggiungi removeBookFromSaved
+import { booksData } from '@/constants/booksData';
+import { addBookToSaved, getSavedBooks, onSavedBooksChange, removeBookFromSaved } from '@/constants/savedBooksData'; 
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams();
