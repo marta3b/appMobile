@@ -141,6 +141,7 @@ export default function HomeScreen() {
         </ThemedText>
       </ThemedView>
 
+
       <ThemedView style={styles.stepContainer}>
         <Link href="/modal">
           <Link.Trigger>
@@ -155,7 +156,19 @@ export default function HomeScreen() {
           Vai alla sezione Preferiti per vedere i libri che hai salvato.
         </ThemedText>
       </ThemedView>
+      
+      <ThemedView style={styles.stepContainer}>
+        <Link href="/(tabs)/explore">
+          <ThemedText type="subtitle">Vai al tuo Profilo</ThemedText>
+        </Link>
+        <ThemedText>
+          Visualizza i tuoi preferiti e gestisci il tuo account.
+        </ThemedText>
+      </ThemedView>
+
     </ParallaxScrollView>
+
+
   );
 }
 
