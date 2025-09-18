@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { Image } from 'expo-image';
-import { View, StyleSheet, FlatList, TextInput, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, FlatList, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 
-import { booksData, booksByGenre, genreOrder, Book } from '@/constants/booksData';
+import { booksData, booksByGenre, genreOrder, Book, genres } from '@/constants/booksData';
 import { addBookToSaved } from '@/constants/savedBooksData';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -26,8 +24,7 @@ export default function HomeScreen() {
       const filtered = booksData.filter(book => 
         book.title.toLowerCase().includes(query.toLowerCase()) ||
         book.author.toLowerCase().includes(query.toLowerCase()) ||
-        book.genre.toLowerCase().includes(query.toLowerCase()) ||
-        book.description.toLowerCase().includes(query.toLowerCase())
+        book.genre.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredBooks(filtered);
     }
@@ -60,7 +57,7 @@ export default function HomeScreen() {
             }}
           >
             <Ionicons name="heart-outline" size={16} color="#ff3b30" />
-            <ThemedText style={styles.saveText}>Aggiungi ai preferiti</ThemedText>
+            <ThemedText style={styles.saveText}>Salva</ThemedText>
           </TouchableOpacity>
         </View>
       </ThemedView>
@@ -87,25 +84,42 @@ export default function HomeScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
       headerImage={
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          source={require('@/assets/images/libri-bho.png')}
+          style={styles.headerImage}
         />
       }>
+      
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Libreria</ThemedText>
-        <HelloWave />
+        <ThemedText type="title">Libroo</ThemedText>
+        <ThemedText style={styles.subtitle}>La tua libreria personale</ThemedText>
       </ThemedView>
       
       <ThemedView style={styles.searchContainer}>
-        <TextInput
+        <TouchableOpacity 
           style={styles.searchInput}
-          placeholder="Cerca libri, autori o generi..."
-          value={searchQuery}
-          onChangeText={handleSearch}
-        />
+          onPress={() => router.push('/search')}
+        >
+          <Ionicons name="search" size={20} color="#666" />
+          <ThemedText style={styles.searchPlaceholder}>Cerca libri, autori o generi...</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+
+      <ThemedView style={styles.popularSection}>
+        <ThemedText type="title" style={styles.sectionTitle}>Generi popolari</ThemedText>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.genreScroll}>
+          {genres.slice(0, 6).map(genre => (
+            <TouchableOpacity 
+              key={genre} 
+              style={styles.genrePill}
+              onPress={() => router.push({ pathname: '/search', params: { genre } })}
+            >
+              <ThemedText style={styles.genrePillText}>{genre}</ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </ThemedView>
 
       {searchQuery ? (
@@ -129,67 +143,41 @@ export default function HomeScreen() {
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Esplora la tua libreria</ThemedText>
         <ThemedText>
-          Premi{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          per aprire gli strumenti di sviluppo.
+          Scorri per scoprire nuovi libri e generi letterari.
         </ThemedText>
       </ThemedView>
-
-
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Vedi i tuoi preferiti</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Azione" icon="heart" onPress={() => alert('Azione preferiti')} />
-          </Link.Menu>
-        </Link>
-        <ThemedText>
-          Vai alla sezione Preferiti per vedere i libri che hai salvato.
-        </ThemedText>
-      </ThemedView>
-      
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/(tabs)/explore">
-          <ThemedText type="subtitle">Vai al tuo Profilo</ThemedText>
-        </Link>
-        <ThemedText>
-          Visualizza i tuoi preferiti e gestisci il tuo account.
-        </ThemedText>
-      </ThemedView>
-
     </ParallaxScrollView>
-
-
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginBottom: 16,
+    paddingTop: 20,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
   },
   searchContainer: {
     paddingHorizontal: 16,
     marginBottom: 16,
   },
   searchInput: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 50,
+    borderColor: '#ddd',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+    paddingHorizontal: 16,
     backgroundColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  searchPlaceholder: {
+    color: '#666',
   },
   stepContainer: {
     gap: 8,
@@ -207,34 +195,36 @@ const styles = StyleSheet.create({
   bookCard: {
     width: 150,
     marginRight: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: 'white',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   bookImage: {
     width: '100%',
     height: 200,
   },
   bookInfo: {
-    padding: 8,
+    padding: 12,
   },
   authorText: {
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 4,
+    color: '#666',
   },
   genreText: {
-    color: '#666',
+    color: '#888',
     fontSize: 11,
     marginTop: 4,
   },
   gridContainer: {
     justifyContent: 'space-between',
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   saveButton: {
     flexDirection: 'row',
@@ -246,11 +236,33 @@ const styles = StyleSheet.create({
     color: '#ff3b30',
     marginLeft: 4,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
+  headerImage: {
+    height: 200,
+    width: '100%',
     bottom: 0,
     left: 0,
     position: 'absolute',
+  },
+  popularSection: {
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    marginBottom: 12,
+    fontSize: 20,
+  },
+  genreScroll: {
+    paddingVertical: 8,
+  },
+  genrePill: {
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  genrePillText: {
+    color: '#2E8B57',
+    fontWeight: '500',
   },
 });
